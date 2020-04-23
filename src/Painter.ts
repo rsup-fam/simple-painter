@@ -37,7 +37,6 @@ export default class Painter {
     
     private _canvas: HTMLCanvasElement;
     private _ctx: CanvasRenderingContext2D
-    private _drawPositions: Position[];
     private _drawFigures: DrawFigure[];
     private _emitter: EventEmitter;
     private _painterView: PainterView;
@@ -61,7 +60,6 @@ export default class Painter {
         this.drawOption = { type, color, thickness, lineCap };
 
         this._drawFigures = [];
-        this._drawPositions = [];
         this._emitter = new EventEmitter();
         this._painterView = new PainterView({width, height, canvas});
         
@@ -107,96 +105,78 @@ export default class Painter {
 
         const {canvas} = this;
         let isDrawing = false;
+        let drawPositions: Position[] = [];
+
+        const startDraw = (position: Position, event: MouseEvent | TouchEvent) => {
+            isDrawing = true;
+            drawPositions.push(position);
+            this._painterView.setDrawInfo(this.drawOption);
+            this._painterView.setStartPosition(position);
+            this._emitter.emit('drawStart', position, event);
+        };
+
+        const drawing = (position: Position, event: MouseEvent | TouchEvent) => {
+            if (!isDrawing) return;
+            if (this.drawOption.type === 'freeLine') {
+                drawPositions.push(position);
+                this._painterView.drawFreeLine(position);
+            }
+    
+            if (this.drawOption.type === 'straightLine') {
+                this._render();
+                drawPositions = [drawPositions[0], position];
+                this._painterView.drawStraightLine(drawPositions);
+            }
+    
+            if (this.drawOption.type === 'rectangle') {
+                this._render();
+                drawPositions = [drawPositions[0], position];
+                this._painterView.drawRectangle(drawPositions);
+            }
+    
+            if (this.drawOption.type === 'ellipse') {
+                this._render();
+                drawPositions = [drawPositions[0], position];
+                this._painterView.drawEllipse(drawPositions);
+            }
+    
+            this._emitter.emit('drawing', position, event);
+        };
+
+        const endDraw = (event: MouseEvent | TouchEvent) => {
+            if (!isDrawing) return;
+            isDrawing = false;
+            drawPositions = [];
+            this._drawFigures.push({ positions: drawPositions, ...this.drawOption });
+            this._emitter.emit('drawEnd', drawPositions, event);
+            this._render();
+        };
 
         const offEvents = [
             on(canvas, 'mousedown', (event) => {
-                const { clientX, clientY } = event;
-                const position = normalizePosition(canvas, { clientX, clientY });
+                const position = normalizePosition(canvas, event);
                 startDraw(position, event);
                 drawing(position, event);
             }),
             on(document, 'mousemove', (event) => {
-                const { clientX, clientY } = event;
-                const position = normalizePosition(canvas, { clientX, clientY });
+                const position = normalizePosition(canvas, event);
                 drawing(position, event);
             }),
             on(document, 'mouseup', endDraw),
-    
             on(canvas, 'touchstart', (event) => {
-                const { clientX, clientY } = event.touches[0];
-                const position = normalizePosition(canvas, { clientX, clientY });
+                const position = normalizePosition(canvas, event.touches[0]);
                 startDraw(position, event);
                 drawing(position, event);
             }),
             on(document, 'touchmove', (event) => {
-                const { clientX, clientY } = event.touches[0];
-                const position = normalizePosition(canvas, { clientX, clientY });
+                const position = normalizePosition(canvas, event.touches[0]);
                 drawing(position, event);
             }),
             on(document, 'touchend', endDraw),
         ];
     
-        // eslint-disable-next-line @typescript-eslint/no-this-alias
-        const painter = this;
-        function startDraw({ x, y }: { x: number; y: number }, event: MouseEvent | TouchEvent) {
-            isDrawing = true;
-            painter._startLiveDraw({ x, y }, event);
-        };
-    
-        function drawing({ x, y }: { x: number; y: number }, event: MouseEvent | TouchEvent) {
-            if (!isDrawing) return;
-            painter._liveDrawing({ x, y }, event);
-        };
-    
-        function endDraw(event: MouseEvent | TouchEvent) {
-            if (!isDrawing) return;
-            isDrawing = false;
-            painter._endLiveDraw(event);
-        };
-    
         this.disableMouseDrawing = () => offEvents.forEach(off => off());
-    }
-
-    private _startLiveDraw(position: Position, event: MouseEvent | TouchEvent) {
-        this._drawPositions.push(position);
-        this._painterView.setDrawInfo(this.drawOption);
-        this._painterView.setStartPosition(position);
-        this._emitter.emit('drawStart', position, event);
-    }
-
-    private _liveDrawing(position: Position, event: MouseEvent | TouchEvent) {
-        if (this.drawOption.type === 'freeLine') {
-            this._drawPositions.push(position);
-            this._painterView.drawFreeLine(position);
-        }
-
-        if (this.drawOption.type === 'straightLine') {
-            this._render();
-            this._drawPositions = [this._drawPositions[0], position];
-            this._painterView.drawStraightLine(this._drawPositions);
-        }
-
-        if (this.drawOption.type === 'rectangle') {
-            this._render();
-            this._drawPositions = [this._drawPositions[0], position];
-            this._painterView.drawRectangle(this._drawPositions);
-        }
-
-        if (this.drawOption.type === 'ellipse') {
-            this._render();
-            this._drawPositions = [this._drawPositions[0], position];
-            this._painterView.drawEllipse(this._drawPositions);
-        }
-
-        this._emitter.emit('drawing', position, event);
-    }
-
-    private _endLiveDraw(event: MouseEvent | TouchEvent) {
-        this._drawFigures.push({ positions: this._drawPositions, ...this.drawOption });
-        this._emitter.emit('drawEnd', this._drawPositions, event);
-        this._drawPositions = [];
-        this._render();
-    }
+    }    
 
     private _render() {
         if (!this._figures.length) return;
