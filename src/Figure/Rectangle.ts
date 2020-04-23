@@ -19,9 +19,11 @@ export default class Rectangle implements Figure{
         const { x: startX, y: startY } = this._start;
         const { x, y } = this._end;
 
-        ctx.beginPath();
-        ctx.moveTo(startX * width, startY * height);
-        ctx.lineTo(x * width, y * height);
-        ctx.stroke();
+        ctx.strokeRect(
+            startX * width, 
+            startY * height, 
+            (x - startX) * width, 
+            (y - startY) * height
+        );
     }
 }
