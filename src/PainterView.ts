@@ -118,4 +118,9 @@ export default class PainterView {
         ctx.closePath();
         ctx.stroke();
     }
+
+    clear(){
+        const {width, height} = this._canvas;
+        this._ctx.clearRect(0, 0, width, height);
+    }
 }

@@ -30,10 +30,9 @@ export interface PainterOptions {
 }
 
 export default class Painter {
-    canvas: HTMLCanvasElement;
-    ctx: CanvasRenderingContext2D;
     drawOption: DrawOption;
-
+    
+    private _canvas: HTMLCanvasElement;
     private _drawPositions: Position[];
     private _drawFigures: DrawFigure[];
     private _emitter: EventEmitter;
@@ -50,13 +49,7 @@ export default class Painter {
         thickness = 3, 
         lineCap = 'square'  
     }: PainterOptions) {
-        const ctx = canvas.getContext('2d');
-        if (!ctx) throw new Error('2d context not supported');
-        if (width) canvas.width = width;
-        if (height) canvas.height = height;
-
-        this.canvas = canvas;
-        this.ctx = ctx;
+        this._canvas = canvas;
         this.drawOption = { type, color, thickness, lineCap };
 
         this._drawFigures = [];
@@ -64,6 +57,10 @@ export default class Painter {
         this._emitter = new EventEmitter();
         this._painterView = new PainterView({width, height, canvas});
         this._offExtendDrawByMouse = drawMouse ? extendDrawByMouse(this) : () => null;
+    }
+
+    get canvas(){
+        return this._canvas;
     }
 
     on(name: 'drawStart' | 'drawing' | 'drawEnd', listener: Listener) {
@@ -85,7 +82,7 @@ export default class Painter {
 
     clear() {
         this._drawFigures = [];
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this._painterView.clear();
     }
 
     destroy() {
@@ -136,7 +133,7 @@ export default class Painter {
 
     _render() {
         if (!this._drawFigures.length) return;
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this._painterView.clear();
 
         for (const drawFigure of this._drawFigures) {
             if (drawFigure.type === 'freeLine') {
