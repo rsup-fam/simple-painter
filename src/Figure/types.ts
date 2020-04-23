@@ -1,5 +1,3 @@
-import PainterView from '../PainterView';
-
 export interface Figure{
-    render(painterView: PainterView): void;
+    render(ctx: CanvasRenderingContext2D, size: {width: number; height: number}): void;
 }

@@ -13,30 +13,6 @@ export default class PainterView {
         if (height) canvas.height = height;
     }
 
-    drawFreeLineFigure({ positions, ...drawOption }: DrawFigure) {
-        this.setDrawInfo(drawOption);
-        this.setStartPosition(positions[0]);
-        
-        for (const position of positions) {
-            this.drawFreeLine(position);
-        }
-    }
-
-    drawRectangleFigure({ positions, ...drawOption }: DrawFigure) {
-        this.setDrawInfo(drawOption);
-        this.drawRectangle(positions);
-    }
-
-    drawEllipseFigure({ positions, ...drawOption }: DrawFigure) {
-        this.setDrawInfo(drawOption);
-        this.drawEllipse(positions);
-    }
-
-    drawStraightLineFigure({ positions, ...drawOption }: DrawFigure) {
-        this.setDrawInfo(drawOption);
-        this.drawStraightLine(positions);
-    }
-
     setDrawInfo(drawOption: DrawOption) {
         const ctx = this._ctx;
         const { color, thickness, lineCap } = drawOption;

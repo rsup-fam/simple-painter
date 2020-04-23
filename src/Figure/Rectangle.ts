@@ -1,5 +1,4 @@
 import {Figure} from "./types";
-import PainterView from "../PainterView";
 import { DrawOption, Position } from "../Painter";
 
 export default class Rectangle implements Figure{
@@ -10,7 +9,19 @@ export default class Rectangle implements Figure{
     ){
     }
 
-    render(painterView: PainterView){
-        painterView.drawRectangleFigure({positions: [this._start, this._end], ...this._drawOption});
+    render(ctx: CanvasRenderingContext2D, {width, height}: {width: number; height: number}){
+        const { color, thickness, lineCap } = this._drawOption;
+
+        if (color) ctx.strokeStyle = color;
+        if (thickness) ctx.lineWidth = thickness;
+        if (lineCap) ctx.lineCap = lineCap;
+
+        const { x: startX, y: startY } = this._start;
+        const { x, y } = this._end;
+
+        ctx.beginPath();
+        ctx.moveTo(startX * width, startY * height);
+        ctx.lineTo(x * width, y * height);
+        ctx.stroke();
     }
 }

@@ -34,6 +34,7 @@ export default class Painter {
     drawOption: DrawOption;
     
     private _canvas: HTMLCanvasElement;
+    private _ctx: CanvasRenderingContext2D
     private _drawPositions: Position[];
     private _drawFigures: DrawFigure[];
     private _emitter: EventEmitter;
@@ -52,6 +53,10 @@ export default class Painter {
         lineCap = 'square'  
     }: PainterOptions) {
         this._canvas = canvas;
+        if (!(this._ctx = canvas.getContext('2d')!)){
+            throw new Error('2d context not supported');
+        }
+        
         this.drawOption = { type, color, thickness, lineCap };
 
         this._drawFigures = [];
@@ -63,6 +68,10 @@ export default class Painter {
 
     get canvas(){
         return this._canvas;
+    }
+
+    get size(){
+        return {width:this._canvas.width, height: this._canvas.height};
     }
 
     on(name: 'drawStart' | 'drawing' | 'drawEnd', listener: Listener) {
@@ -137,7 +146,7 @@ export default class Painter {
         this._painterView.clear();
 
         for (const figure of this._figures) {
-            figure.render(this._painterView);
+            figure.render(this._ctx, this.size);
         }
 
         this._painterView.setDrawInfo(this.drawOption);

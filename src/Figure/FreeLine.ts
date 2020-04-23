@@ -1,5 +1,4 @@
 import {Figure} from "./types";
-import PainterView from "../PainterView";
 import { DrawOption, Position } from "../Painter";
 
 export default class FreeLine implements Figure{
@@ -9,7 +8,17 @@ export default class FreeLine implements Figure{
     ){
     }
 
-    render(painterView: PainterView){
-        painterView.drawFreeLineFigure({positions: this._positions, ...this._drawOption});
+    render(ctx: CanvasRenderingContext2D, {width, height}: {width: number; height: number}){
+        const { color, thickness, lineCap } = this._drawOption;
+
+        if (color) ctx.strokeStyle = color;
+        if (thickness) ctx.lineWidth = thickness;
+        if (lineCap) ctx.lineCap = lineCap;
+
+        ctx.beginPath();
+        for (const position of this._positions) {
+            ctx.lineTo(width * position.x, height* position.y);
+            ctx.stroke();
+        }
     }
 }
