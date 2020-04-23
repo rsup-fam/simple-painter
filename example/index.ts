@@ -6,7 +6,7 @@ const painter = new Painter({ canvas, width: 500, height: 500 });
 
 for (const radio of radios) {
     radio.addEventListener('change', () => {
-        painter.setType(document.querySelector('input[name="draw-type"]:checked').value);
+        painter.setOptions({type: (document.querySelector('input[name="draw-type"]:checked') as any).value});
     });
 }
 
