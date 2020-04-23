@@ -1,15 +1,15 @@
-import {Figure} from "./types";
-import { DrawOption, Position } from "../Painter";
+import {Figure, DrawStyle} from "./types";
+import { Position } from "../Painter";
 
 export default class FreeLine implements Figure{
     constructor( 
-        private _drawOption: DrawOption,
+        private _style: DrawStyle,
         private _positions: Position[],
     ){
     }
 
     render(ctx: CanvasRenderingContext2D, {width, height}: {width: number; height: number}){
-        const { color, thickness, lineCap } = this._drawOption;
+        const { color, thickness, lineCap } = this._style;
 
         if (color) ctx.strokeStyle = color;
         if (thickness) ctx.lineWidth = thickness;
