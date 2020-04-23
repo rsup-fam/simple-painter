@@ -1,7 +1,8 @@
 import PainterView from './PainterView';
-import extendDrawByMouse from './extendDrawByMouse';
 import EventEmitter, { Listener } from './EventEmitter';
 import {Figure} from './Figure/types';
+
+type EventMap<Element=HTMLElement> = Element extends Document ? DocumentEventMap : HTMLElementEventMap
 
 export type DrawThickness = number;
 export type DrawType = 'freeLine' | 'straightLine' | 'rectangle' | 'ellipse';
@@ -32,6 +33,7 @@ export interface PainterOptions {
 
 export default class Painter {
     drawOption: DrawOption;
+    disableMouseDrawing = () => {}; // eslint-disable-line @typescript-eslint/no-empty-function
     
     private _canvas: HTMLCanvasElement;
     private _ctx: CanvasRenderingContext2D
@@ -39,7 +41,6 @@ export default class Painter {
     private _drawFigures: DrawFigure[];
     private _emitter: EventEmitter;
     private _painterView: PainterView;
-    private _offExtendDrawByMouse: () => void;
     private _figures: Figure[] = []
 
     constructor({ 
@@ -63,7 +64,8 @@ export default class Painter {
         this._drawPositions = [];
         this._emitter = new EventEmitter();
         this._painterView = new PainterView({width, height, canvas});
-        this._offExtendDrawByMouse = drawMouse ? extendDrawByMouse(this) : () => null;
+        
+        if(drawMouse) this.enableMouseDrawing();
     }
 
     get canvas(){
@@ -96,18 +98,73 @@ export default class Painter {
     }
 
     destroy() {
-        this._offExtendDrawByMouse();
+        this.disableMouseDrawing();
         this._emitter.allOff();
     }
 
-    _startLiveDraw(position: Position, event: MouseEvent | TouchEvent) {
+    enableMouseDrawing(){
+        this.disableMouseDrawing();
+
+        const {canvas} = this;
+        let isDrawing = false;
+
+        const offEvents = [
+            on(canvas, 'mousedown', (event) => {
+                const { clientX, clientY } = event;
+                const position = normalizePosition(canvas, { clientX, clientY });
+                startDraw(position, event);
+                drawing(position, event);
+            }),
+            on(document, 'mousemove', (event) => {
+                const { clientX, clientY } = event;
+                const position = normalizePosition(canvas, { clientX, clientY });
+                drawing(position, event);
+            }),
+            on(document, 'mouseup', endDraw),
+    
+            on(canvas, 'touchstart', (event) => {
+                const { clientX, clientY } = event.touches[0];
+                const position = normalizePosition(canvas, { clientX, clientY });
+                startDraw(position, event);
+                drawing(position, event);
+            }),
+            on(document, 'touchmove', (event) => {
+                const { clientX, clientY } = event.touches[0];
+                const position = normalizePosition(canvas, { clientX, clientY });
+                drawing(position, event);
+            }),
+            on(document, 'touchend', endDraw),
+        ];
+    
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        const painter = this;
+        function startDraw({ x, y }: { x: number; y: number }, event: MouseEvent | TouchEvent) {
+            isDrawing = true;
+            painter._startLiveDraw({ x, y }, event);
+        };
+    
+        function drawing({ x, y }: { x: number; y: number }, event: MouseEvent | TouchEvent) {
+            if (!isDrawing) return;
+            painter._liveDrawing({ x, y }, event);
+        };
+    
+        function endDraw(event: MouseEvent | TouchEvent) {
+            if (!isDrawing) return;
+            isDrawing = false;
+            painter._endLiveDraw(event);
+        };
+    
+        this.disableMouseDrawing = () => offEvents.forEach(off => off());
+    }
+
+    private _startLiveDraw(position: Position, event: MouseEvent | TouchEvent) {
         this._drawPositions.push(position);
         this._painterView.setDrawInfo(this.drawOption);
         this._painterView.setStartPosition(position);
         this._emitter.emit('drawStart', position, event);
     }
 
-    _liveDrawing(position: Position, event: MouseEvent | TouchEvent) {
+    private _liveDrawing(position: Position, event: MouseEvent | TouchEvent) {
         if (this.drawOption.type === 'freeLine') {
             this._drawPositions.push(position);
             this._painterView.drawFreeLine(position);
@@ -134,14 +191,14 @@ export default class Painter {
         this._emitter.emit('drawing', position, event);
     }
 
-    _endLiveDraw(event: MouseEvent | TouchEvent) {
+    private _endLiveDraw(event: MouseEvent | TouchEvent) {
         this._drawFigures.push({ positions: this._drawPositions, ...this.drawOption });
         this._emitter.emit('drawEnd', this._drawPositions, event);
         this._drawPositions = [];
         this._render();
     }
 
-    _render() {
+    private _render() {
         if (!this._figures.length) return;
         this._painterView.clear();
 
@@ -151,4 +208,24 @@ export default class Painter {
 
         this._painterView.setDrawInfo(this.drawOption);
     }
+}
+
+function on<E extends HTMLElement|Document, Event extends keyof EventMap<E>>(
+    element: E,
+    name: Event, 
+    callback: (event: EventMap<E>[Event]) => void
+) {
+    (element as any).addEventListener(name, callback);
+    return () => (element as any).removeEventListener(name, callback);
+}
+
+function normalizePosition(
+    canvas: HTMLCanvasElement, 
+    { clientX, clientY }: { clientX: number; clientY: number }
+) {
+    const { top, left, width, height } = canvas.getBoundingClientRect();
+    return {
+        x: Number((clientX - left) / width),
+        y: Number((clientY - top) / height)
+    };
 }
