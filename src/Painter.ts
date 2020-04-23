@@ -62,7 +62,7 @@ export default class Painter {
         this._drawFigures = [];
         this._drawPositions = [];
         this._emitter = new EventEmitter();
-        this._painterView = new PainterView(this);
+        this._painterView = new PainterView({width, height, canvas});
         this._offExtendDrawByMouse = drawMouse ? extendDrawByMouse(this) : () => null;
     }
 
@@ -76,6 +76,7 @@ export default class Painter {
             ...drawOption,
         };
     }
+
 
     drawFigure(drawFigure: DrawFigure) {
         this._drawFigures.push({ ...this.drawOption, ...drawFigure });

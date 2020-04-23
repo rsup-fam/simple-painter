@@ -1,10 +1,16 @@
 import Painter, { Position, DrawOption, DrawFigure } from './Painter';
 
 export default class PainterView {
-    private _painter: Painter;
+    private _canvas: HTMLCanvasElement
+    private _ctx: CanvasRenderingContext2D
 
-    constructor(painter: Painter) {
-        this._painter = painter;
+    constructor({ canvas, width, height }: {canvas: HTMLCanvasElement; width?: number; height?: number}) {
+        this._canvas = canvas;
+        if (!(this._ctx = canvas.getContext('2d')!)){
+            throw new Error('2d context not supported');
+        }
+        if (width) canvas.width = width;
+        if (height) canvas.height = height;
     }
 
     drawFreeLineFigure({ positions, ...drawOption }: DrawFigure) {
@@ -32,7 +38,7 @@ export default class PainterView {
     }
 
     setDrawInfo(drawOption: DrawOption) {
-        const { ctx } = this._painter;
+        const ctx = this._ctx;
         const { color, thickness, lineCap } = drawOption;
 
         if (color) ctx.strokeStyle = color;
@@ -43,44 +49,51 @@ export default class PainterView {
     }
 
     setStartPosition(position: Position) {
-        const { ctx, canvas } = this._painter;
-        ctx.moveTo(canvas.width * position.x, canvas.height * position.y);
+        const {width, height} = this._canvas;
+        this._ctx.moveTo(width * position.x, height * position.y);
     }
 
     drawFreeLine(position: Position) {
-        const { ctx, canvas } = this._painter;
-        ctx.lineTo(canvas.width * position.x, canvas.height * position.y);
+        const ctx = this._ctx;
+        const {width, height} = this._canvas;
+        ctx.lineTo(width * position.x, height* position.y);
         ctx.stroke();
     }
 
     drawStraightLine(positions: Position[]) {
         const { x: startX, y: startY } = positions[0];
         const { x, y } = positions[positions.length - 1];
-        const { ctx, canvas } = this._painter;
+
+        const ctx = this._ctx;
+        const {width, height} = this._canvas;
 
         ctx.beginPath();
-        ctx.moveTo(startX * canvas.width, startY * canvas.height);
-        ctx.lineTo(x * canvas.width, y * canvas.height);
+        ctx.moveTo(startX * width, startY * height);
+        ctx.lineTo(x * width, y * height);
         ctx.stroke();
     }
 
     drawRectangle(positions: Position[]) {
         const { x: startX, y: startY } = positions[0];
         const { x, y } = positions[positions.length - 1];
-        const { ctx, canvas } = this._painter;
+                
+        const ctx = this._ctx;
+        const {width, height} = this._canvas;
 
         ctx.strokeRect(
-            startX * canvas.width, 
-            startY * canvas.height, 
-            (x - startX) * canvas.width, 
-            (y - startY) * canvas.height
+            startX * width, 
+            startY * height, 
+            (x - startX) * width, 
+            (y - startY) * height
         );
     }
 
     drawEllipse(positions: Position[]) {
         const startPosition = positions[0];
         const position = positions[positions.length - 1];
-        const { ctx, canvas } = this._painter;
+        
+        const ctx = this._ctx;
+        const canvas = this._canvas;
 
         const startX = startPosition.x * canvas.width;
         const startY = startPosition.y * canvas.height;
