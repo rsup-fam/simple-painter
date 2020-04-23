@@ -1,6 +1,7 @@
 import PainterView from './PainterView';
 import extendDrawByMouse from './extendDrawByMouse';
 import EventEmitter, { Listener } from './EventEmitter';
+import {Figure} from './Figure/types';
 
 export type DrawThickness = number;
 export type DrawType = 'freeLine' | 'straightLine' | 'rectangle' | 'ellipse';
@@ -38,6 +39,7 @@ export default class Painter {
     private _emitter: EventEmitter;
     private _painterView: PainterView;
     private _offExtendDrawByMouse: () => void;
+    private _figures: Figure[] = []
 
     constructor({ 
         canvas, 
@@ -74,9 +76,8 @@ export default class Painter {
         };
     }
 
-
-    drawFigure(drawFigure: DrawFigure) {
-        this._drawFigures.push({ ...this.drawOption, ...drawFigure });
+    draw(figure: Figure){
+        this._figures.push(figure);
         this._render();
     }
 
@@ -132,25 +133,11 @@ export default class Painter {
     }
 
     _render() {
-        if (!this._drawFigures.length) return;
+        if (!this._figures.length) return;
         this._painterView.clear();
 
-        for (const drawFigure of this._drawFigures) {
-            if (drawFigure.type === 'freeLine') {
-                this._painterView.drawFreeLineFigure(drawFigure);
-            }
-
-            if (drawFigure.type === 'rectangle') {
-                this._painterView.drawRectangleFigure(drawFigure);
-            }
-
-            if (drawFigure.type === 'ellipse') {
-                this._painterView.drawEllipseFigure(drawFigure);
-            }
-
-            if (drawFigure.type === 'straightLine') {
-                this._painterView.drawStraightLineFigure(drawFigure);
-            }
+        for (const figure of this._figures) {
+            figure.render(this._painterView);
         }
 
         this._painterView.setDrawInfo(this.drawOption);
