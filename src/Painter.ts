@@ -77,34 +77,6 @@ export default class Painter {
         };
     }
 
-    setType(type: DrawType) {
-        this.drawOption = {
-            ...this.drawOption,
-            type,
-        };
-    }
-
-    setColor(color: DrawColor) {
-        this.drawOption = {
-            ...this.drawOption,
-            color,
-        };
-    }
-
-    setThickness(thickness: DrawThickness) {
-        this.drawOption = {
-            ...this.drawOption,
-            thickness,
-        };
-    }
-
-    setLineCap(lineCap: CanvasLineCap) {
-        this.drawOption = {
-            ...this.drawOption,
-            lineCap,
-        };
-    }
-
     drawFigure(drawFigure: DrawFigure) {
         this._drawFigures.push({ ...this.drawOption, ...drawFigure });
         this._render();
