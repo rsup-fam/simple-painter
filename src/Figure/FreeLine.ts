@@ -1,10 +1,14 @@
-import {Figure, DrawStyle, Position} from "../types";
+import {Figure, DrawStyle, Position, DrawingEvent} from "../types";
 
 export default class FreeLine implements Figure{
     constructor( 
         private _style: DrawStyle,
         private _positions: Position[],
     ){
+    }
+
+    updateByDrawingEvent({position}: DrawingEvent){
+        this._positions.push(position);
     }
 
     render(ctx: CanvasRenderingContext2D, {width, height}: {width: number; height: number}){

@@ -1,6 +1,10 @@
 import PainterView from './PainterView';
 import EventEmitter, { Listener } from './EventEmitter';
 import {Figure, Position} from './types';
+import FreeLine from './Figure/FreeLine';
+import StraightLine from './Figure/StraightLine';
+import Rectangle from './Figure/Rectangle';
+import Ellipse from './Figure/Ellipse';
 
 type EventMap<Element=HTMLElement> = Element extends Document ? DocumentEventMap : HTMLElementEventMap
 
@@ -103,51 +107,43 @@ export default class Painter {
         this.disableMouseDrawing();
 
         const {canvas} = this;
-        let isDrawing = false;
-        let drawPositions: Position[] = [];
+        let drawingFigure: Figure|null  = null;
 
         const startDraw = (position: Position, event: MouseEvent | TouchEvent) => {
-            isDrawing = true;
-            drawPositions.push(position);
-            this._painterView.setDrawInfo(this.drawOption);
-            this._painterView.setStartPosition(position);
+            switch (this.drawOption.type){
+            case 'freeLine': 
+                drawingFigure = new FreeLine(this.drawOption, [position]);
+                break;
+            case 'straightLine': 
+                drawingFigure = new StraightLine(this.drawOption, position, position);
+                break;
+            case 'rectangle': 
+                drawingFigure = new Rectangle(this.drawOption, position, position);
+                break;
+            case 'ellipse': 
+                drawingFigure = new Ellipse(this.drawOption, position, position);
+                break;
+            }
+
             this._emitter.emit('drawStart', position, event);
         };
 
         const drawing = (position: Position, event: MouseEvent | TouchEvent) => {
-            if (!isDrawing) return;
-            if (this.drawOption.type === 'freeLine') {
-                drawPositions.push(position);
-                this._painterView.drawFreeLine(position);
-            }
-    
-            if (this.drawOption.type === 'straightLine') {
-                this._render();
-                drawPositions = [drawPositions[0], position];
-                this._painterView.drawStraightLine(drawPositions);
-            }
-    
-            if (this.drawOption.type === 'rectangle') {
-                this._render();
-                drawPositions = [drawPositions[0], position];
-                this._painterView.drawRectangle(drawPositions);
-            }
-    
-            if (this.drawOption.type === 'ellipse') {
-                this._render();
-                drawPositions = [drawPositions[0], position];
-                this._painterView.drawEllipse(drawPositions);
-            }
-    
-            this._emitter.emit('drawing', position, event);
+            if (!drawingFigure) return;
+
+            this._render();
+            const drawingEvent = {originalEvent: event, canvas: this._canvas, position};
+            drawingFigure.updateByDrawingEvent(drawingEvent);
+            drawingFigure.render(this._ctx, this.size);
+            
+            this._emitter.emit('drawing', drawingEvent);
         };
 
         const endDraw = (event: MouseEvent | TouchEvent) => {
-            if (!isDrawing) return;
-            isDrawing = false;
-            drawPositions = [];
-            this._drawFigures.push({ positions: drawPositions, ...this.drawOption });
-            this._emitter.emit('drawEnd', drawPositions, event);
+            if (!drawingFigure) return;
+            this.draw(drawingFigure);
+            drawingFigure = null;
+            this._emitter.emit('drawEnd', event);
             this._render();
         };
 
@@ -184,8 +180,6 @@ export default class Painter {
         for (const figure of this._figures) {
             figure.render(this._ctx, this.size);
         }
-
-        this._painterView.setDrawInfo(this.drawOption);
     }
 }
 

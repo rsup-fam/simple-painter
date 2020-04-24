@@ -1,4 +1,4 @@
-import {Figure, DrawStyle, Position} from "../types";
+import {Figure, DrawStyle, Position, DrawingEvent} from "../types";
 
 export default class Ellipse implements Figure{
     constructor( 
@@ -6,6 +6,10 @@ export default class Ellipse implements Figure{
         private _start: Position,
         private _end: Position,
     ){
+    }
+
+    updateByDrawingEvent({position}: DrawingEvent){
+        this._end = position;
     }
 
     render(ctx: CanvasRenderingContext2D, size: {width: number; height: number}){
