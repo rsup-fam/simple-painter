@@ -1,3 +1,5 @@
+export type Position = { x: number; y: number };
+
 export interface DrawStyle {
     color?: string | CanvasGradient | CanvasPattern;
     thickness?: number;

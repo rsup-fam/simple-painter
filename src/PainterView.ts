@@ -1,4 +1,5 @@
-import Painter, { Position, DrawOption, DrawFigure } from './Painter';
+import { DrawOption } from './Painter';
+import { Position } from './types';
 
 export default class PainterView {
     private _canvas: HTMLCanvasElement

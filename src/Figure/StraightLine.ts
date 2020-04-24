@@ -1,5 +1,4 @@
-import {Figure, DrawStyle} from "./types";
-import { Position } from "../Painter";
+import {Figure, DrawStyle, Position} from "../types";
 
 export default class StraightLine implements Figure{
     constructor( 

@@ -1,13 +1,12 @@
 import PainterView from './PainterView';
 import EventEmitter, { Listener } from './EventEmitter';
-import {Figure} from './Figure/types';
+import {Figure, Position} from './types';
 
 type EventMap<Element=HTMLElement> = Element extends Document ? DocumentEventMap : HTMLElementEventMap
 
 export type DrawThickness = number;
 export type DrawType = 'freeLine' | 'straightLine' | 'rectangle' | 'ellipse';
 export type DrawColor = string | CanvasGradient | CanvasPattern;
-export type Position = { x: number; y: number };
 
 export interface DrawOption {
     type?: DrawType;
