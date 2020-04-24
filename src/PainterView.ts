@@ -1,5 +1,5 @@
 import { DrawOption } from './Painter';
-import { Position } from './types';
+import { RelativePosition } from './types';
 
 export default class PainterView {
     private _canvas: HTMLCanvasElement

@@ -1,15 +1,15 @@
-import {Figure, DrawStyle, Position, DrawingEvent} from "../types";
+import {Figure, DrawStyle, RelativePosition, DrawingEvent} from "../types";
 
 export default class StraightLine implements Figure{
     constructor( 
         private _style: DrawStyle,
-        private _start: Position,
-        private _end: Position,
+        private _start: RelativePosition,
+        private _end: RelativePosition,
     ){
     }
 
-    updateByDrawingEvent({position}: DrawingEvent){
-        this._end = position;
+    updateByDrawingEvent({relativePosition}: DrawingEvent){
+        this._end = relativePosition;
     }
 
     render(ctx: CanvasRenderingContext2D, {width, height}: {width: number; height: number}){

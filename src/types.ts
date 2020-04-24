@@ -1,4 +1,4 @@
-export type Position = { x: number; y: number };
+export type RelativePosition = { x: number; y: number };
 
 export interface DrawStyle {
     color?: string | CanvasGradient | CanvasPattern;
@@ -9,7 +9,7 @@ export interface DrawStyle {
 export interface DrawingEvent {
     originalEvent: MouseEvent|TouchEvent;
     canvas: HTMLCanvasElement;
-    position: Position;
+    relativePosition: RelativePosition;
 }
 
 export interface Figure{

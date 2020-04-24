@@ -1,6 +1,6 @@
 import PainterView from './PainterView';
 import EventEmitter, { Listener } from './EventEmitter';
-import {Figure, Position} from './types';
+import {Figure, RelativePosition} from './types';
 import FreeLine from './Figure/FreeLine';
 import StraightLine from './Figure/StraightLine';
 import Rectangle from './Figure/Rectangle';
@@ -20,7 +20,7 @@ export interface DrawOption {
 }
 
 export interface DrawFigure extends DrawOption {
-    positions: Position[];
+    positions: RelativePosition[];
 }
 
 export interface PainterOptions {
@@ -109,7 +109,7 @@ export default class Painter {
         const {canvas} = this;
         let drawingFigure: Figure|null  = null;
 
-        const startDraw = (position: Position, event: MouseEvent | TouchEvent) => {
+        const startDraw = (position: RelativePosition, event: MouseEvent | TouchEvent) => {
             switch (this.drawOption.type){
             case 'freeLine': 
                 drawingFigure = new FreeLine(this.drawOption, [position]);
@@ -128,11 +128,11 @@ export default class Painter {
             this._emitter.emit('drawStart', position, event);
         };
 
-        const drawing = (position: Position, event: MouseEvent | TouchEvent) => {
+        const drawing = (position: RelativePosition, event: MouseEvent | TouchEvent) => {
             if (!drawingFigure) return;
 
             this._render();
-            const drawingEvent = {originalEvent: event, canvas: this._canvas, position};
+            const drawingEvent = {originalEvent: event, canvas: this._canvas, relativePosition: position};
             drawingFigure.updateByDrawingEvent(drawingEvent);
             drawingFigure.render(this._ctx, this.size);
             
