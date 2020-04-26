@@ -8,19 +8,21 @@ export default class Rectangle implements Figure{
     ){
     }
 
-    drawing(ctx: CanvasRenderingContext2D, {onDrawing}: DrawingEventSource){
-        onDrawing(({canvas, relativePosition}) => {
+    async drawing(ctx: CanvasRenderingContext2D, events: DrawingEventSource){
+        for await(const event of events) {
+            const {canvas, relativePosition} = event;
             const {width, height} = canvas;
             if(this._start){
                 this._end = relativePosition;
             }else{
                 this._start = this._end = relativePosition;
             }
+
             ctx.clearRect(0, 0, width, height);
             this.render(ctx, {width, height});
-        });
+        }
     }
-    
+
     render(ctx: CanvasRenderingContext2D, {width, height}: {width: number; height: number}){
         if(this._start === undefined || this._end === undefined) return;
 

@@ -14,7 +14,7 @@ export interface DrawingEvent {
 
 export type DrawingListener = (e: DrawingEvent) => void
 
-export type DrawingEventSource = {onDrawing: (cb: DrawingListener) => void; onEnd: (cb: Function) => void}
+export type DrawingEventSource = AsyncGenerator<DrawingEvent>
 
 export interface Figure{
     drawing(ctx: CanvasRenderingContext2D, events: DrawingEventSource): void;

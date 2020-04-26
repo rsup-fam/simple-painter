@@ -1,6 +1,6 @@
 import PainterView from './PainterView';
 import EventEmitter, { Listener } from './EventEmitter';
-import {Figure, RelativePosition, DrawingListener} from './types';
+import {Figure, RelativePosition, DrawingListener, DrawingEvent} from './types';
 import FreeLine from './Figure/FreeLine';
 import StraightLine from './Figure/StraightLine';
 import Rectangle from './Figure/Rectangle';
@@ -111,8 +111,14 @@ export default class Painter {
         const tmpCtx = tmpCanvas.getContext('2d')!;
         
         let drawingFigure: Figure|null  = null;
-        let onDrawing: DrawingListener|null = null;
-        let onEnd: Function|null = null;
+        let resolve: (v?: DrawingEvent) => void = noop;
+
+        async function * drawingEvents () {
+            let event: DrawingEvent|undefined;
+            while(event = await new Promise<DrawingEvent|undefined>(r => resolve = r)){
+                yield event;
+            }
+        }
 
         const startDraw = (position: RelativePosition, event: MouseEvent | TouchEvent) => {
             switch (this.drawOption.type){
@@ -135,27 +141,25 @@ export default class Painter {
             overlayStyle(canvas, tmpCanvas);
             document.body.appendChild(tmpCanvas);
 
-            drawingFigure.drawing(tmpCtx, {
-                onDrawing: cb => (onDrawing = cb),
-                onEnd: cb => (onEnd = cb)
-            });
+            drawingFigure.drawing(tmpCtx, drawingEvents());
             this._emitter.emit('drawStart', position, event);
         };
 
         const drawing = (position: RelativePosition, event: MouseEvent | TouchEvent) => {
             if (!drawingFigure) return;
             const drawingEvent = {originalEvent: event, canvas: this._canvas, relativePosition: position};
-            onDrawing?.(drawingEvent);
+            resolve(drawingEvent);
             this._emitter.emit('drawing', drawingEvent);
         };
 
         const endDraw = (event: MouseEvent | TouchEvent) => {
             if (!drawingFigure) return;
             document.body.removeChild(tmpCanvas);
-            onEnd?.();
+            resolve();
             this._figures.push(drawingFigure);
             this._ctx.drawImage(tmpCanvas, 0, 0);
-            onDrawing = onEnd = drawingFigure = null;
+            resolve = noop;
+            drawingFigure = null;
             this._emitter.emit('drawEnd', event);
         };
 
@@ -220,4 +224,8 @@ function overlayStyle(origin: HTMLCanvasElement, target: HTMLCanvasElement) {
         top: top + (width - origin.width)/2 +'px', 
         left: left + (height - origin.height)/2 + 'px' 
     });
+}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+function noop(){
 }
