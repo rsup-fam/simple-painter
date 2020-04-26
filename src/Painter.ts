@@ -107,9 +107,15 @@ export default class Painter {
         this.disableMouseDrawing();
 
         const {canvas} = this;
+        const tmpCanvas = document.createElement('canvas');
+        const tmpCtx = tmpCanvas.getContext('2d')!;
+        
         let drawingFigure: Figure|null  = null;
 
         const startDraw = (position: RelativePosition, event: MouseEvent | TouchEvent) => {
+            overlayStyle(canvas, tmpCanvas);
+            document.body.appendChild(tmpCanvas);
+
             switch (this.drawOption.type){
             case 'freeLine': 
                 drawingFigure = new FreeLine(this.drawOption, [position]);
@@ -131,16 +137,18 @@ export default class Painter {
         const drawing = (position: RelativePosition, event: MouseEvent | TouchEvent) => {
             if (!drawingFigure) return;
 
-            this._render();
+            tmpCtx.clearRect(0, 0, this.size.width, this.size.height);
+
             const drawingEvent = {originalEvent: event, canvas: this._canvas, relativePosition: position};
             drawingFigure.updateByDrawingEvent(drawingEvent);
-            drawingFigure.render(this._ctx, this.size);
+            drawingFigure.render(tmpCtx, this.size);
             
             this._emitter.emit('drawing', drawingEvent);
         };
 
         const endDraw = (event: MouseEvent | TouchEvent) => {
             if (!drawingFigure) return;
+            document.body.removeChild(tmpCanvas);
             this.draw(drawingFigure);
             drawingFigure = null;
             this._emitter.emit('drawEnd', event);
@@ -201,4 +209,14 @@ function normalizePosition(
         x: Number((clientX - left) / width),
         y: Number((clientY - top) / height)
     };
+}
+
+function overlayStyle(origin: HTMLCanvasElement, target: HTMLCanvasElement) {
+    const {top, left, width, height} = origin.getBoundingClientRect();
+    Object.assign(target, {width: origin.width, height:origin.height});
+    Object.assign(target.style, { 
+        position: 'fixed', 
+        top: top + (width - origin.width)/2 +'px', 
+        left: left + (height - origin.height)/2 + 'px' 
+    });
 }
