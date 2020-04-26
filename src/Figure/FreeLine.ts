@@ -16,7 +16,6 @@ export default class FreeLine implements Figure{
         if (lineCap) ctx.lineCap = lineCap;
         
         this._positions = [];
-
         ctx.beginPath();
 
         for await(const event of events) {
@@ -28,7 +27,7 @@ export default class FreeLine implements Figure{
             }else{
                 ctx.moveTo(width * x, height * y);
             }
-            
+
             this._positions.push({x, y});
         }
     }
@@ -44,6 +43,7 @@ export default class FreeLine implements Figure{
         if (lineCap) ctx.lineCap = lineCap;
 
         ctx.beginPath();
+        
         for (const position of this._positions) {
             ctx.lineTo(width * position.x, height* position.y);
             ctx.stroke();
