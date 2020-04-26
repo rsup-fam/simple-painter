@@ -8,7 +8,6 @@ export interface DrawStyle {
 
 export interface DrawingEvent {
     originalEvent: MouseEvent|TouchEvent;
-    canvas: HTMLCanvasElement;
     relativePosition: RelativePosition;
 }
 
@@ -19,5 +18,5 @@ export type DrawingEventSource = AsyncGenerator<DrawingEvent>
 export interface Figure{
     drawing(ctx: CanvasRenderingContext2D, events: DrawingEventSource): void;
     
-    render(ctx: CanvasRenderingContext2D, size: {width: number; height: number}): void;
+    render(ctx: CanvasRenderingContext2D): void;
 }

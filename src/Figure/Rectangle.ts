@@ -9,9 +9,11 @@ export default class Rectangle implements Figure{
     }
 
     async drawing(ctx: CanvasRenderingContext2D, events: DrawingEventSource){
+        const {width, height} = ctx.canvas;
+        
         for await(const event of events) {
-            const {canvas, relativePosition} = event;
-            const {width, height} = canvas;
+            const {relativePosition} = event;
+
             if(this._start){
                 this._end = relativePosition;
             }else{
@@ -19,14 +21,15 @@ export default class Rectangle implements Figure{
             }
 
             ctx.clearRect(0, 0, width, height);
-            this.render(ctx, {width, height});
+            this.render(ctx);
         }
     }
 
-    render(ctx: CanvasRenderingContext2D, {width, height}: {width: number; height: number}){
+    render(ctx: CanvasRenderingContext2D){
         if(this._start === undefined || this._end === undefined) return;
 
         const { color, thickness, lineCap } = this._style;
+        const {width, height} = ctx.canvas;
 
         if (color) ctx.strokeStyle = color;
         if (thickness) ctx.lineWidth = thickness;

@@ -9,9 +9,11 @@ export default class Ellipse implements Figure{
     }
 
     async drawing(ctx: CanvasRenderingContext2D, events: DrawingEventSource){
+        const {width, height} = ctx.canvas;
+
         for await(const event of events) {
-            const {canvas, relativePosition} = event;
-            const {width, height} = canvas;
+            const {relativePosition} = event;
+            
             if(this._start){
                 this._end = relativePosition;
             }else{
@@ -19,14 +21,15 @@ export default class Ellipse implements Figure{
             }
 
             ctx.clearRect(0, 0, width, height);
-            this.render(ctx, {width, height});
+            this.render(ctx);
         }
     }
 
-    render(ctx: CanvasRenderingContext2D, size: {width: number; height: number}){
+    render(ctx: CanvasRenderingContext2D){
         if(this._start === undefined || this._end === undefined) return;
 
         const { color, thickness, lineCap } = this._style;
+        const {canvas} = ctx;
 
         if (color) ctx.strokeStyle = color;
         if (thickness) ctx.lineWidth = thickness;
@@ -37,10 +40,10 @@ export default class Ellipse implements Figure{
         const startPosition = this._start;
         const position = this._end;
         
-        const startX = startPosition.x * size.width;
-        const startY = startPosition.y * size.height;
-        const x = position.x * size.width;
-        const y = position.y * size.height;
+        const startX = startPosition.x * canvas.width;
+        const startY = startPosition.y * canvas.height;
+        const x = position.x * canvas.width;
+        const y = position.y * canvas.height;
         const width = x - startX;
         const height = y - startY;
         const kappa = (4 * (Math.sqrt(2) - 1)) / 3;

@@ -9,6 +9,7 @@ export default class FreeLine implements Figure{
 
     async drawing(ctx: CanvasRenderingContext2D, events: DrawingEventSource){
         const { color, thickness, lineCap } = this._style;
+        const {width, height} = ctx.canvas;
 
         if (color) ctx.strokeStyle = color;
         if (thickness) ctx.lineWidth = thickness;
@@ -17,22 +18,26 @@ export default class FreeLine implements Figure{
         this._positions = [];
 
         ctx.beginPath();
+
         for await(const event of events) {
-            const {relativePosition: {x, y}, canvas} = event;
-            this._positions.push({x, y});
-            if(this._positions.length === 1){
-                ctx.moveTo(canvas.width * x, canvas.height * y);
-            }else{
-                ctx.lineTo(canvas.width * x, canvas.height * y);
+            const {x, y} = event.relativePosition;
+            
+            if(this._positions.length){
+                ctx.lineTo(width * x, height * y);
                 ctx.stroke();
+            }else{
+                ctx.moveTo(width * x, height * y);
             }
+            
+            this._positions.push({x, y});
         }
     }
 
-    render(ctx: CanvasRenderingContext2D, {width, height}: {width: number; height: number}){
+    render(ctx: CanvasRenderingContext2D){
         if(!this._positions) return;
 
         const { color, thickness, lineCap } = this._style;
+        const {width, height} = ctx.canvas;
 
         if (color) ctx.strokeStyle = color;
         if (thickness) ctx.lineWidth = thickness;

@@ -90,7 +90,7 @@ export default class Painter {
 
     draw(figure: Figure){
         this._figures.push(figure);
-        figure.render(this._ctx, this.size);
+        figure.render(this._ctx);
     }
 
     clear() {
@@ -191,7 +191,7 @@ export default class Painter {
 
     redraw() {
         for (const figure of this._figures) {
-            figure.render(this._ctx, this.size);
+            figure.render(this._ctx);
         }
     }
 }
