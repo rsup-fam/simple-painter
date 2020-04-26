@@ -90,7 +90,7 @@ export default class Painter {
 
     draw(figure: Figure){
         this._figures.push(figure);
-        this._render();
+        figure.render(this._ctx, this.size);
     }
 
     clear() {
@@ -184,7 +184,7 @@ export default class Painter {
         this.disableMouseDrawing = () => offEvents.forEach(off => off());
     }    
 
-    private _render() {
+    redraw() {
         for (const figure of this._figures) {
             figure.render(this._ctx, this.size);
         }
