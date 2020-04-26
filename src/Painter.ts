@@ -1,6 +1,5 @@
-import PainterView from './PainterView';
 import EventEmitter, { Listener } from './EventEmitter';
-import {Figure, RelativePosition, DrawingListener, DrawingEvent} from './types';
+import {Figure, RelativePosition, DrawingEvent} from './types';
 import FreeLine from './Figure/FreeLine';
 import StraightLine from './Figure/StraightLine';
 import Rectangle from './Figure/Rectangle';
@@ -40,9 +39,7 @@ export default class Painter {
     
     private _canvas: HTMLCanvasElement;
     private _ctx: CanvasRenderingContext2D
-    private _drawFigures: DrawFigure[];
     private _emitter: EventEmitter;
-    private _painterView: PainterView;
     private _figures: Figure[] = []
 
     constructor({ 
@@ -59,13 +56,13 @@ export default class Painter {
         if (!(this._ctx = canvas.getContext('2d')!)){
             throw new Error('2d context not supported');
         }
+
+        if (width) canvas.width = width;
+        if (height) canvas.height = height;
         
         this.drawOption = { type, color, thickness, lineCap };
-
-        this._drawFigures = [];
         this._emitter = new EventEmitter();
-        this._painterView = new PainterView({width, height, canvas});
-        
+                
         if(drawMouse) this.enableMouseDrawing();
     }
 
@@ -94,8 +91,8 @@ export default class Painter {
     }
 
     clear() {
-        this._drawFigures = [];
-        this._painterView.clear();
+        const {width, height} = this.size;
+        this._ctx.clearRect(0, 0, width, height);
     }
 
     destroy() {
