@@ -41,6 +41,7 @@ export default class Painter {
     private _ctx: CanvasRenderingContext2D
     private _emitter: EventEmitter;
     private _figures: Figure[] = []
+    private _cursor = 0
 
     constructor({ 
         canvas, 
@@ -86,8 +87,29 @@ export default class Painter {
     }
 
     draw(figure: Figure){
-        this._figures.push(figure);
+        this._push(figure);
         figure.render(this._ctx);
+    }
+    
+    private _push(figure: Figure){
+        // eslint-disable-next-line no-plusplus
+        (this._figures = this._figures.slice(0, this._cursor++)).push(figure);
+    }
+
+    undo(){
+        if(this._cursor > 0) {            
+            // eslint-disable-next-line no-plusplus
+            this._cursor--;
+            this.redraw();
+        }
+    }
+
+    redo(){
+        if(this._cursor < this._figures.length){
+            // eslint-disable-next-line no-plusplus
+            this._cursor++;
+            this.redraw();
+        }
     }
 
     clear() {
@@ -153,8 +175,8 @@ export default class Painter {
             if (!drawingFigure) return;
             document.body.removeChild(tmpCanvas);
             resolve();
-            this._figures.push(drawingFigure);
             this._ctx.drawImage(tmpCanvas, 0, 0);
+            this._push(drawingFigure);
             resolve = noop;
             drawingFigure = null;
             this._emitter.emit('drawEnd', event);
@@ -187,7 +209,8 @@ export default class Painter {
     }    
 
     redraw() {
-        for (const figure of this._figures) {
+        this.clear();
+        for (const figure of this._figures.slice(0, this._cursor)) {
             figure.render(this._ctx);
         }
     }

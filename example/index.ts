@@ -6,7 +6,7 @@ import StraightLine from '../src/Figure/StraightLine';
 
 const radios = document.getElementsByName('draw-type');
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
-const painter = new Painter({ canvas, width: 500, height: 500 });
+const painter = (window as any).painter = new Painter({ canvas, width: 500, height: 500 });
 
 for (const radio of radios) {
     radio.addEventListener('change', () => {
