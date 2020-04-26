@@ -153,7 +153,8 @@ export default class Painter {
             if (!drawingFigure) return;
             document.body.removeChild(tmpCanvas);
             onEnd?.();
-            this.draw(drawingFigure);
+            this._figures.push(drawingFigure);
+            this._ctx.drawImage(tmpCanvas, 0, 0);
             onDrawing = onEnd = drawingFigure = null;
             this._emitter.emit('drawEnd', event);
         };
