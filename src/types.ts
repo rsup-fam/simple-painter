@@ -12,8 +12,12 @@ export interface DrawingEvent {
     relativePosition: RelativePosition;
 }
 
-export interface Figure{
-    updateByDrawingEvent(event: DrawingEvent): void;
+export type DrawingListener = (e: DrawingEvent) => void
 
+export type DrawingEventSource = {onDrawing: (cb: DrawingListener) => void; onEnd: (cb: Function) => void}
+
+export interface Figure{
+    drawing(ctx: CanvasRenderingContext2D, events: DrawingEventSource): void;
+    
     render(ctx: CanvasRenderingContext2D, size: {width: number; height: number}): void;
 }

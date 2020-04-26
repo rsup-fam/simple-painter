@@ -1,6 +1,6 @@
 import PainterView from './PainterView';
 import EventEmitter, { Listener } from './EventEmitter';
-import {Figure, RelativePosition} from './types';
+import {Figure, RelativePosition, DrawingListener} from './types';
 import FreeLine from './Figure/FreeLine';
 import StraightLine from './Figure/StraightLine';
 import Rectangle from './Figure/Rectangle';
@@ -111,48 +111,51 @@ export default class Painter {
         const tmpCtx = tmpCanvas.getContext('2d')!;
         
         let drawingFigure: Figure|null  = null;
+        let onDrawing: DrawingListener|null = null;
+        let onEnd: Function|null = null;
 
         const startDraw = (position: RelativePosition, event: MouseEvent | TouchEvent) => {
+            switch (this.drawOption.type){
+            case 'freeLine': 
+                drawingFigure = new FreeLine(this.drawOption);
+                break;
+            case 'straightLine': 
+                drawingFigure = new StraightLine(this.drawOption);
+                break;
+            case 'rectangle': 
+                drawingFigure = new Rectangle(this.drawOption);
+                break;
+            case 'ellipse': 
+                drawingFigure = new Ellipse(this.drawOption);
+                break;
+            default:
+                throw new Error(`There is no figure of "${this.drawOption.type}" type.`);
+            }
+
             overlayStyle(canvas, tmpCanvas);
             document.body.appendChild(tmpCanvas);
 
-            switch (this.drawOption.type){
-            case 'freeLine': 
-                drawingFigure = new FreeLine(this.drawOption, [position]);
-                break;
-            case 'straightLine': 
-                drawingFigure = new StraightLine(this.drawOption, position, position);
-                break;
-            case 'rectangle': 
-                drawingFigure = new Rectangle(this.drawOption, position, position);
-                break;
-            case 'ellipse': 
-                drawingFigure = new Ellipse(this.drawOption, position, position);
-                break;
-            }
-
+            drawingFigure.drawing(tmpCtx, {
+                onDrawing: cb => (onDrawing = cb),
+                onEnd: cb => (onEnd = cb)
+            });
             this._emitter.emit('drawStart', position, event);
         };
 
         const drawing = (position: RelativePosition, event: MouseEvent | TouchEvent) => {
             if (!drawingFigure) return;
-
-            tmpCtx.clearRect(0, 0, this.size.width, this.size.height);
-
             const drawingEvent = {originalEvent: event, canvas: this._canvas, relativePosition: position};
-            drawingFigure.updateByDrawingEvent(drawingEvent);
-            drawingFigure.render(tmpCtx, this.size);
-            
+            onDrawing?.(drawingEvent);
             this._emitter.emit('drawing', drawingEvent);
         };
 
         const endDraw = (event: MouseEvent | TouchEvent) => {
             if (!drawingFigure) return;
             document.body.removeChild(tmpCanvas);
+            onEnd?.();
             this.draw(drawingFigure);
-            drawingFigure = null;
+            onDrawing = onEnd = drawingFigure = null;
             this._emitter.emit('drawEnd', event);
-            this._render();
         };
 
         const offEvents = [
@@ -182,9 +185,6 @@ export default class Painter {
     }    
 
     private _render() {
-        if (!this._figures.length) return;
-        this._painterView.clear();
-
         for (const figure of this._figures) {
             figure.render(this._ctx, this.size);
         }
